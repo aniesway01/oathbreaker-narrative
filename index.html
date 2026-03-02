@@ -102,7 +102,7 @@ body {
   position: relative; z-index: 1;
 }
 .char-avatar {
-  width: 30px; height: 30px;
+  width: 34px; height: 34px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 11px; font-weight: 700;
@@ -110,6 +110,14 @@ body {
   border: 2px solid rgba(255,255,255,0.15);
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+}
+.char-avatar img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 .char-avatar:hover {
   transform: scale(1.15);
@@ -392,12 +400,90 @@ body {
 }
 .char-section-header:hover { background: var(--bg3); }
 .char-section-avatar {
-  width: 42px; height: 42px;
+  width: 48px; height: 48px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 16px; font-weight: 700; color: #fff;
   flex-shrink: 0;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
 }
+.char-section-avatar img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.char-portrait-full {
+  width: 100%;
+  max-width: 280px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  margin: 8px auto;
+  display: block;
+  box-shadow: var(--shadow);
+}
+
+/* === CG Gallery === */
+.cg-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 8px 0;
+}
+.cg-item {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.cg-item:hover {
+  transform: scale(1.03);
+  border-color: var(--accent);
+  box-shadow: 0 4px 20px rgba(198,40,40,0.3);
+}
+.cg-item img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+}
+.cg-item .cg-label {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.8));
+  padding: 20px 8px 6px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.8);
+}
+.cg-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.cg-lightbox img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 8px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+.cg-lightbox .close-btn {
+  position: absolute;
+  top: 20px; right: 24px;
+  font-size: 28px;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.cg-lightbox .close-btn:hover { opacity: 1; }
 .char-section-info { flex: 1; min-width: 0; }
 .char-section-info h3 {
   font-size: 16px; font-weight: 600; color: #fff;
@@ -487,6 +573,8 @@ body {
   .group-header { padding: 10px 14px; }
   .group-header h2 { font-size: 15px; }
   .kb-hint { display: none; }
+  .cg-gallery { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+  .char-portrait-full { max-width: 200px; }
 }
 </style>
 </head>
@@ -529,6 +617,7 @@ body {
         <button class="view-btn active" data-view="narrative" id="viewNarrative">敘事</button>
         <button class="view-btn" data-view="scene" id="viewScene">場景</button>
         <button class="view-btn" data-view="character" id="viewChar">角色</button>
+        <button class="view-btn" data-view="gallery" id="viewGallery">圖庫</button>
       </div>
     </div>
   </div>
@@ -546,7 +635,7 @@ body {
 </div>
 
 <div class="kb-hint">
-  <kbd>/</kbd> 搜尋 &nbsp; <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> 切換視圖 &nbsp; <kbd>Esc</kbd> 清除
+  <kbd>/</kbd> 搜尋 &nbsp; <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> 切換視圖 &nbsp; <kbd>Esc</kbd> 清除
 </div>
 
 <script>
@@ -557,6 +646,41 @@ body {
 
 // === Constants ===
 const CHUNK_SIZE = 60;
+
+// Character face portrait images
+const CHAR_FACES = {
+  'Pup': 'images/faces/pup.png', 'Charlotte': 'images/faces/charlotte.png',
+  'Norde': 'images/faces/norde.png', 'Rowan': 'images/faces/rowan.png',
+  'Kara': 'images/faces/kara.png', 'Castel': 'images/faces/castel.png',
+  'Mariel': 'images/faces/mariel.png', 'Satia': 'images/faces/satia.png',
+  'Otis': 'images/faces/otis.png', 'Tatiana': 'images/faces/tatiana.png',
+  'Elliot': 'images/faces/elliot.png', 'Reagyn': 'images/faces/reagyn.png',
+  'Jude': 'images/faces/jude.png', 'Flynn': 'images/faces/flynn.png',
+  'Nora': 'images/faces/nora.png', 'Bennett': 'images/faces/bennett.png',
+  'Aegis': 'images/faces/aegis.png', 'Ivan': 'images/faces/ivan.png',
+  'Macy': 'images/faces/macy.png', 'Jenny': 'images/faces/jenny.png',
+  'Atticus': 'images/faces/atticus.png', 'Jakson': 'images/faces/jakson.png',
+  'Liebra': 'images/faces/liebra.png'
+};
+
+// Character full illustrations (from charillust/)
+const CHAR_ILLUST = {
+  'Pup': 'images/pup.png', 'Charlotte': 'images/charlotte.png',
+  'Kara': 'images/kara.png', 'Aegis': 'images/aegis.png',
+  'Rowan': 'images/rowan.png'
+};
+
+// CG Gallery images
+const CG_IMAGES = [
+  { src: 'images/cg/battle.jpg', title: '戰鬥場景', en: 'Battle Scene' },
+  { src: 'images/cg/worldmap.jpg', title: '世界地圖', en: 'World Map' },
+  { src: 'images/cg/pup_kara.jpg', title: 'Pup 與 Kara', en: 'Pup & Kara' },
+  { src: 'images/cg/pup_deck.jpg', title: '甲板場景', en: 'Pup on Deck' },
+  { src: 'images/cg/pup_sick.jpg', title: 'Pup 生病', en: 'Pup Sick' },
+  { src: 'images/cg/locket.jpg', title: '墜飾', en: 'Locket' },
+  { src: 'images/cg/mirror.jpg', title: '鏡子', en: 'Mirror CG' },
+  { src: 'images/cg/shopping.jpg', title: '購物場景', en: 'Shopping' }
+];
 
 // Character color palette - dark medieval tones
 const CHAR_COLORS = {
@@ -691,10 +815,14 @@ function renderBanner() {
     `<span class="stat-item"><b>${chars.length}</b> 角色</span>` +
     `<span class="stat-item" style="color:${pct>=95?'#66bb6a':'#ffab00'}">${pct}% 已翻譯</span>`;
 
-  // Character avatars in banner
+  // Character avatars in banner (with face images)
   const avatarBox = document.getElementById('charAvatars');
   avatarBox.innerHTML = chars.slice(0, 8).map(c => {
     const color = CHAR_COLORS[c] || '#546e7a';
+    const face = CHAR_FACES[c];
+    if (face) {
+      return `<div class="char-avatar" style="border-color:${color}66" title="${c}" onclick="filterByChar('${c}')"><img src="${face}" alt="${c}" loading="lazy"></div>`;
+    }
     return `<div class="char-avatar" style="background:${color}" title="${c}" onclick="filterByChar('${c}')">${c[0]}</div>`;
   }).join('');
 }
@@ -830,11 +958,15 @@ function passageHtml(p) {
     ? `<div class="tag-row">${p.tags.map(t => `<span class="tag ${tagClass(t)}">${escHtml(t)}</span>`).join('')}</div>`
     : '';
 
-  // Characters
+  // Characters (with face icons)
   const chars = (p.characters && p.characters.length > 0)
     ? `<div class="char-pills">${p.characters.map(c => {
         const color = CHAR_COLORS[c] || '#546e7a';
-        return `<span class="char-pill" style="background:${color}18;color:${color};border:1px solid ${color}33" onclick="filterByChar('${c}')">${c}</span>`;
+        const face = CHAR_FACES[c];
+        const icon = face
+          ? `<img src="${face}" alt="" style="width:16px;height:16px;border-radius:50%;object-fit:cover;vertical-align:middle">`
+          : '';
+        return `<span class="char-pill" style="background:${color}18;color:${color};border:1px solid ${color}33" onclick="filterByChar('${c}')">${icon}${c}</span>`;
       }).join('')}</div>`
     : '';
 
@@ -1102,13 +1234,14 @@ function renderSceneSubs(container, charSubs, groupName) {
     const color = CHAR_COLORS[charName] || '#546e7a';
     const isGeneral = charName === '(general)';
 
+    const face = CHAR_FACES[charName];
     const sub = document.createElement('div');
     sub.className = 'char-section';
     sub.style.margin = '4px 0';
     sub.innerHTML = `
       <div class="char-section-header" style="padding:10px 14px">
-        <div class="char-section-avatar" style="background:${color};width:32px;height:32px;font-size:13px">
-          ${isGeneral ? '?' : charName[0]}
+        <div class="char-section-avatar" style="background:${color};width:36px;height:36px;font-size:13px">
+          ${isGeneral ? '?' : face ? `<img src="${face}" alt="${escHtml(charName)}" loading="lazy">` : charName[0]}
         </div>
         <div class="char-section-info">
           <h3 style="font-size:14px">${isGeneral ? '一般場景' : escHtml(charName)}</h3>
@@ -1179,11 +1312,16 @@ function renderCharacterView(passages) {
     });
     const groupStr = Object.entries(groups).map(([k,v]) => `${GROUP_NAMES_ZH[k]||k} ${v}`).join(' / ');
 
+    const face = CHAR_FACES[charName];
+    const illust = CHAR_ILLUST[charName];
+
     const section = document.createElement('div');
     section.className = 'char-section';
     section.innerHTML = `
       <div class="char-section-header">
-        <div class="char-section-avatar" style="background:${color}">${charName[0]}</div>
+        <div class="char-section-avatar" style="background:${color}">
+          ${face ? `<img src="${face}" alt="${escHtml(charName)}" loading="lazy">` : charName[0]}
+        </div>
         <div class="char-section-info">
           <h3>${escHtml(charName)}</h3>
           <div class="meta">${charPassages.length} 段落 | ${groupStr}</div>
@@ -1195,13 +1333,21 @@ function renderCharacterView(passages) {
     const body = document.createElement('div');
     body.className = 'char-section-body' + (isOpen ? ' open' : '');
 
+    function renderCharBody() {
+      if (illust) {
+        body.insertAdjacentHTML('beforeend',
+          `<img src="${illust}" alt="${escHtml(charName)}" class="char-portrait-full" loading="lazy">`);
+      }
+      renderChunked(body, charPassages, 0);
+    }
+
     section.querySelector('.char-section-header').addEventListener('click', () => {
       const nowOpen = body.classList.toggle('open');
       section.querySelector('.group-arrow').classList.toggle('open', nowOpen);
       if (nowOpen) {
         openSections.add('c:' + charName);
         if (!body.dataset.rendered) {
-          renderChunked(body, charPassages, 0);
+          renderCharBody();
           body.dataset.rendered = '1';
         }
       } else {
@@ -1210,7 +1356,7 @@ function renderCharacterView(passages) {
     });
 
     if (isOpen && !body.dataset.rendered) {
-      renderChunked(body, charPassages, 0);
+      renderCharBody();
       body.dataset.rendered = '1';
     }
 
@@ -1258,6 +1404,108 @@ function renderCharacterView(passages) {
   }
 }
 
+// === Gallery View ===
+function renderGalleryView() {
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+
+  // Character Portraits section
+  const charTitle = document.createElement('div');
+  charTitle.className = 'group-header';
+  charTitle.style.cursor = 'default';
+  charTitle.innerHTML = `
+    <div class="group-icon" style="background:${CHAR_COLORS['Pup']}22;color:${CHAR_COLORS['Pup']}">FP</div>
+    <div class="group-info">
+      <h2>角色立繪</h2>
+      <div class="group-name-en">Character Portraits</div>
+    </div>
+    <div class="group-stats"><b>${Object.keys(CHAR_ILLUST).length}</b> 角色</div>
+  `;
+  content.appendChild(charTitle);
+
+  const portraitGrid = document.createElement('div');
+  portraitGrid.className = 'cg-gallery';
+  portraitGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(140px, 1fr))';
+
+  Object.entries(CHAR_ILLUST).forEach(([name, src]) => {
+    const color = CHAR_COLORS[name] || '#546e7a';
+    portraitGrid.innerHTML += `
+      <div class="cg-item" onclick="openLightbox('${src}')">
+        <img src="${src}" alt="${escHtml(name)}" loading="lazy">
+        <div class="cg-label" style="background:linear-gradient(transparent, ${color}cc)">${escHtml(name)}</div>
+      </div>
+    `;
+  });
+  content.appendChild(portraitGrid);
+
+  // Face sprites section
+  const faceTitle = document.createElement('div');
+  faceTitle.className = 'group-header';
+  faceTitle.style.cursor = 'default';
+  faceTitle.style.marginTop = '16px';
+  faceTitle.innerHTML = `
+    <div class="group-icon" style="background:#00838f22;color:#00838f">FC</div>
+    <div class="group-info">
+      <h2>角色頭像</h2>
+      <div class="group-name-en">Face Sprites</div>
+    </div>
+    <div class="group-stats"><b>${Object.keys(CHAR_FACES).length}</b> 角色</div>
+  `;
+  content.appendChild(faceTitle);
+
+  const faceGrid = document.createElement('div');
+  faceGrid.style.display = 'flex';
+  faceGrid.style.flexWrap = 'wrap';
+  faceGrid.style.gap = '12px';
+  faceGrid.style.padding = '12px 0';
+
+  Object.entries(CHAR_FACES).forEach(([name, src]) => {
+    const color = CHAR_COLORS[name] || '#546e7a';
+    faceGrid.innerHTML += `
+      <div style="text-align:center;width:80px">
+        <img src="${src}" alt="${escHtml(name)}" style="width:64px;height:64px;border-radius:50%;border:2px solid ${color};display:block;margin:0 auto 4px" loading="lazy">
+        <div style="font-size:11px;color:var(--text2)">${escHtml(name)}</div>
+      </div>
+    `;
+  });
+  content.appendChild(faceGrid);
+
+  // CG Gallery section
+  const cgTitle = document.createElement('div');
+  cgTitle.className = 'group-header';
+  cgTitle.style.cursor = 'default';
+  cgTitle.style.marginTop = '16px';
+  cgTitle.innerHTML = `
+    <div class="group-icon" style="background:#c6282822;color:#c62828">CG</div>
+    <div class="group-info">
+      <h2>場景 CG</h2>
+      <div class="group-name-en">Scene Gallery</div>
+    </div>
+    <div class="group-stats"><b>${CG_IMAGES.length}</b> 張</div>
+  `;
+  content.appendChild(cgTitle);
+
+  const cgGrid = document.createElement('div');
+  cgGrid.className = 'cg-gallery';
+  CG_IMAGES.forEach(cg => {
+    cgGrid.innerHTML += `
+      <div class="cg-item" onclick="openLightbox('${cg.src}')">
+        <img src="${cg.src}" alt="${escHtml(cg.title)}" loading="lazy">
+        <div class="cg-label">${escHtml(cg.title)}</div>
+      </div>
+    `;
+  });
+  content.appendChild(cgGrid);
+}
+
+function openLightbox(src) {
+  const lb = document.createElement('div');
+  lb.className = 'cg-lightbox';
+  lb.innerHTML = `<span class="close-btn">&times;</span><img src="${src}" alt="">`;
+  lb.addEventListener('click', () => lb.remove());
+  document.body.appendChild(lb);
+}
+
 // === Render Dispatch ===
 function resetAndRender() {
   document.querySelectorAll('[data-rendered]').forEach(el => {
@@ -1270,6 +1518,7 @@ function resetAndRender() {
     case 'narrative': renderNarrativeView(passages); break;
     case 'scene': renderSceneView(passages); break;
     case 'character': renderCharacterView(passages); break;
+    case 'gallery': renderGalleryView(); break;
   }
 }
 
@@ -1277,7 +1526,7 @@ function setActiveView(view) {
   currentView = view;
   openSections.clear();
   document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-  const btnId = view === 'narrative' ? 'viewNarrative' : view === 'scene' ? 'viewScene' : 'viewChar';
+  const btnId = view === 'narrative' ? 'viewNarrative' : view === 'scene' ? 'viewScene' : view === 'gallery' ? 'viewGallery' : 'viewChar';
   document.getElementById(btnId).classList.add('active');
   updateFilterBar();
   resetAndRender();
@@ -1306,6 +1555,7 @@ function init() {
   document.getElementById('viewNarrative').addEventListener('click', () => setActiveView('narrative'));
   document.getElementById('viewScene').addEventListener('click', () => setActiveView('scene'));
   document.getElementById('viewChar').addEventListener('click', () => setActiveView('character'));
+  document.getElementById('viewGallery').addEventListener('click', () => setActiveView('gallery'));
 
   // Keyboard shortcuts
   document.addEventListener('keydown', e => {
@@ -1314,7 +1564,10 @@ function init() {
     if (e.key === '1') setActiveView('narrative');
     if (e.key === '2') setActiveView('scene');
     if (e.key === '3') setActiveView('character');
+    if (e.key === '4') setActiveView('gallery');
     if (e.key === 'Escape') {
+      const lb = document.querySelector('.cg-lightbox');
+      if (lb) { lb.remove(); return; }
       document.getElementById('searchBox').blur();
       if (charFilter) { charFilter = null; updateFilterBar(); resetAndRender(); }
     }
